@@ -64,3 +64,7 @@ def main():
     training_data = news_text + social_media_text + blog_text
     
     print(training_data)
+    
+    
+if __name__ == "__main__":
+    main()

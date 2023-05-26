@@ -3,6 +3,12 @@ import random
 import numpy as np
 import cv2
 
+import docker
+
+from dotenv import load_dotenv
+
+load_dotenv()  # take environment variables from .env.
+
 class Animation:
     """
     This class generates an animation of random shapes on a canvas.

@@ -59,7 +59,12 @@ pip install \
     googletrans \
     deepl \
     nltk \
-    spacy
+    spacy \
+    jupyter \
+    jupyterlab \
+    jupyterlab-code-formatter \
+    jupyterlab-git \
+    jupyterlab-lsp
 
-    
+
 
