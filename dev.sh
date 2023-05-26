@@ -57,7 +57,9 @@ pip install \
     deep-translator \
     detectlanguage \
     googletrans \
-    deepl
+    deepl \
+    nltk \
+    spacy
 
     
 

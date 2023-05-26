@@ -142,7 +142,9 @@ dependencies = [
     "soundfile",
     "transformers",
     "langchain",
-    "pytube3"
+    "pytube3",
+    "nltk",
+    "spacy"
 ]
 
 # List additional groups of dependencies here (e.g. development
