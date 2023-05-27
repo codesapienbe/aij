@@ -64,7 +64,11 @@ pip install \
     jupyterlab \
     jupyterlab-code-formatter \
     jupyterlab-git \
-    jupyterlab-lsp
+    jupyterlab-lsp \
+    pynput \
+    screeninfo \
+    comtypes \
+    pycaw
 
 
 

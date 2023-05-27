@@ -149,7 +149,9 @@ dependencies = [
     "jupyterlab",
     "jupyterlab-code-formatter",
     "jupyterlab-git",
-    "jupyterlab-lsp"
+    "jupyterlab-lsp",
+    "pynput",
+    "screeninfo"
 ]
 
 # List additional groups of dependencies here (e.g. development
