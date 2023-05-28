@@ -366,11 +366,9 @@ class Keyboard():
         
     def move(self, pos):
         self.pos = pos
-        self.fill()
         
     def resize(self, size):
         self.size = size
-        self.fill()
         
 
 class NewsAPISearch():
@@ -476,6 +474,22 @@ is_news_playing = True
 
 MAX_NUMBER_OF_HANDS_TO_DETECT = 2
 
+def generate_loading_animation(img):
+    """
+    Generate the loading animation with an overlay on the image
+    """
+    overlay = np.zeros((img.shape[0], img.shape[1], 3), np.uint8)
+    
+    cv2.rectangle(
+        overlay,
+        (0, 0),
+        (img.shape[1], img.shape[0]),
+        (0, 0, 0),
+        -1
+    )
+    
+    img = cv2.addWeighted(overlay, 0.5, img, 0.5, 0)
+    return img
 
 def main():
         
@@ -543,8 +557,6 @@ def main():
 
         if len(hand) == 1:
             
-            keyboard.visible = True
-            
             landmarks = hand[0]["lmList"]
             distance, _, img = detector.findDistance(
                 landmarks[8][:2], landmarks[12][:2], img)
@@ -567,7 +579,6 @@ def main():
             rh = right_hand[8][1] < right_hand[9][1]
             
             if lh and not rh:
-                keyboard.visible = True
                 distance, _, img = detector.findDistance(
                 left_hand[8][:2], left_hand[12][:2], img)
                 x, y = left_hand[8][:2]
@@ -581,7 +592,6 @@ def main():
                             delay_counter = 1
                             
             elif rh and not lh:
-                keyboard.visible = True
                 distance, _, img = detector.findDistance(
                 right_hand[8][:2], right_hand[12][:2], img)
                 x, y = right_hand[8][:2]
@@ -597,17 +607,12 @@ def main():
             # if both hands are closed then make the keyboard invisible
             elif lh and rh:
                 keyboard.visible = False
+                img = generate_loading_animation(img)
                 delay_counter = 1
             
             # if both hands are opened then show the keyboard
             elif not lh and not rh:
                 keyboard.visible = True
-                # calculate the center of left index and right index fingers
-                x = (left_hand[8][0] + left_hand[9][0]) // 2
-                y = (left_hand[8][1] + left_hand[9][1]) // 2
-                pos = (x, y)
-                
-                keyboard.move(pos)
                 delay_counter = 1
             
         # avoid duplicates
