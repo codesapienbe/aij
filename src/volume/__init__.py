@@ -1,215 +1,104 @@
+from sys import argv
+import cv2
 import mediapipe as mp
-import time
-import math
-
-import time
-import numpy as np
-import math
+from math import hypot
 from ctypes import cast, POINTER
 from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
-import cv2
+import numpy as np
 
+# If there is an argument in the command line pass it to the function set DEBUG to False
+DEBUG = argv[1] == "--debug" if len(argv) > 1 else False
 
-class handDetector():
-    def __init__(self, mode=False, maxHands=2, detectionCon=0.5, trackCon=0.5):
-        self.mode = mode
-        self.maxHands = maxHands
-        self.detectionCon = detectionCon
-        self.trackCon = trackCon
+cap = cv2.VideoCapture(0)  # Checks for camera
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)  # Sets the width
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)  # Sets the height
+cap.set(cv2.CAP_PROP_FPS, 30)  # Sets the fps
 
-        self.mpHands = mp.solutions.hands
-        self.hands = self.mpHands.Hands(self.mode, self.maxHands,
-                                        self.detectionCon, self.trackCon)
-        self.mpDraw = mp.solutions.drawing_utils
-        self.tipIds = [4, 8, 12, 16, 20]
+mp_hands = mp.solutions.hands  # detects hand/finger
+hands = mp_hands.Hands()  # complete the initialization configuration of hands
+mpDraw = mp.solutions.drawing_utils
 
-
-    def findHands(self, img, draw=True):
-        imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        self.results = self.hands.process(imgRGB)
-        # print(results.multi_hand_landmarks)
-
-        if self.results.multi_hand_landmarks:
-            for handLms in self.results.multi_hand_landmarks:
-                if draw:
-                    self.mpDraw.draw_landmarks(img, handLms, self.mpHands.HAND_CONNECTIONS)
-        return img
-
-
-    def findPosition(self, img, handNo=0, draw=True):
-        xList = []
-        yList = []
-        bbox = []
-        self.lmList = []
-        if self.results.multi_hand_landmarks:
-            myHand = self.results.multi_hand_landmarks[handNo]
-        for id, lm in enumerate(myHand.landmark):
-            # print(id, lm)
-            h, w, c = img.shape
-            cx, cy = int(lm.x * w), int(lm.y * h)
-            xList.append(cx)
-            yList.append(cy)
-            # print(id, cx, cy)
-            self.lmList.append([id, cx, cy])
-            if draw:
-                cv2.circle(img, (cx, cy), 5, (255, 0, 255), cv2.FILLED)
-        xmin, xmax = min(xList), max(xList)
-        ymin, ymax = min(yList), max(yList)
-        bbox = xmin, ymin, xmax, ymax
-
-        if draw:
-            cv2.rectangle(img, (bbox[0] - 20, bbox[1] - 20),
-                        (bbox[2] + 20, bbox[3] + 20), (0, 255, 0), 2)
-
-        return self.lmList, bbox
-
-
-    def fingersUp(self):
-        fingers = []
-        # Thumb
-        if self.lmList[self.tipIds[0]][1] > self.lmList[self.tipIds[0] - 1][1]:
-            fingers.append(1)
-        else:
-            fingers.append(0)
-        # 4 Fingers
-        for id in range(1, 5):
-            if self.lmList[self.tipIds[id]][2] < self.lmList[self.tipIds[id] - 2][2]:
-                fingers.append(1)
-            else:
-                fingers.append(0)
-        return fingers
-
-
-    def findDistance(self, p1, p2, img, draw=True):
-        x1, y1 = self.lmList[p1][1], self.lmList[p1][2]
-        x2, y2 = self.lmList[p2][1], self.lmList[p2][2]
-        cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
-
-        if draw:
-            cv2.circle(img, (x1, y1), 15, (255, 0, 255), cv2.FILLED)
-            cv2.circle(img, (x2, y2), 15, (255, 0, 255), cv2.FILLED)
-            cv2.line(img, (x1, y1), (x2, y2), (255, 0, 255), 3)
-            cv2.circle(img, (cx, cy), 15, (255, 0, 255), cv2.FILLED)
-
-        length = math.hypot(x2 - x1, y2 - y1)
-        return length, img, [x1, y1, x2, y2, cx, cy]
-
-
-################################
-wCam, hCam = 640, 480
-################################
-WEBCAM_INDEX = 0
-SCREEN_WIDTH = 1280
-SCREEN_HEIGHT = 720
-SCREEN_FPS = 60
-
-cap = cv2.VideoCapture(WEBCAM_INDEX)
-cap.set(3, SCREEN_WIDTH)
-cap.set(4, SCREEN_HEIGHT)
-cap.set(5, SCREEN_FPS)
-
-pTime = 0
-
-detector = handDetector(detectionCon=0.7, maxHands=1)
-
+# To access speaker through the library pycaw
 devices = AudioUtilities.GetSpeakers()
 interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
 volume = cast(interface, POINTER(IAudioEndpointVolume))
-# volume.GetMute()
-# volume.GetMasterVolumeLevel()
-volRange = volume.GetVolumeRange()
-minVol = volRange[0]
-maxVol = volRange[1]
-vol = 0
-volBar = 400
-volPer = 0
-area = 0
-colorVol = (255, 0, 0)
+volbar = 400
+volper = 0
 
-while True:
-    success, img = cap.read()
+# volume range
+volMin, volMax = volume.GetVolumeRange()[:2]
 
-    # Find Hand
-    img = detector.findHands(img)
-    lmList, bbox = detector.findPosition(img, draw=True)
-    if len(lmList) != 0:
+# while the capture device is open run the loop
+while cap.isOpened():
 
-        # Filter based on size
-        area = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1]) // 100
-        # print(area)
-        if 250 < area < 1000:
+    success, frame = cap.read()  # If camera works capture an image
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # Convert to RGB
+    # flip the image
+    frame = cv2.flip(frame, 1)
 
-            # Find Distance between index and Thumb
-            length, img, lineInfo = detector.findDistance(4, 8, img)
-            # print(length)
+    # Collection of gesture information
+    results = hands.process(frame)  # completes the image processing.
 
-            # Convert Volume
-            volBar = np.interp(length, [50, 200], [400, 150])
-            volPer = np.interp(length, [50, 200], [0, 100])
+    lmList = []  # empty list
+    if results.multi_hand_landmarks:  # list of all hands detected.
+        
+        # By accessing the list, we can get the information of each hand's corresponding flag bit
+        for hand_landmarks in results.multi_hand_landmarks:
+            
+            # adding counter and returning it
+            for id, lm in enumerate(hand_landmarks.landmark):
+                # Get finger joint points
+                h, w, _ = frame.shape
+                cx, cy = int(lm.x * w), int(lm.y * h)
+                # adding to the empty list 'lmList'
+                lmList.append([id, cx, cy])
+            
+            if DEBUG:
+                print(lmList)        
+                mpDraw.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
-            # Reduce Resolution to make it smoother
-            smoothness = 10
-            volPer = smoothness * round(volPer / smoothness)
+    if lmList != []:
+        
+        # if the index finger and middle finger are in the middle left of the screen
+        # increase the volume
+        # getting the value at a point as x, y
+        x1, y1 = lmList[4][1], lmList[4][2]  # thumb
+        x2, y2 = lmList[8][1], lmList[8][2]  # index finger
 
-            # Check fingers up
-            fingers = detector.fingersUp()
-            # print(fingers)
+        if x1 < frame.shape[1] // 2 and x2 < frame.shape[1] // 2 and y1 < frame.shape[0] // 2 and y2 < frame.shape[0] // 2:
 
-            # If pinky is down set volume
-            if not fingers[4]:
-                volume.SetMasterVolumeLevelScalar(volPer / 100, None)
-                cv2.circle(img, (lineInfo[4], lineInfo[5]), 15, (0, 255, 0), cv2.FILLED)
-                colorVol = (0, 255, 0)
-            else:
-                colorVol = (255, 0, 0)
+            # creating circle at the tips of thumb and index finger
+            # image #fingers #radius #rgb
+            cv2.circle(frame, (x1, y1), 13, (255, 0, 0), cv2.FILLED)
+            # image #fingers #radius #rgb
+            cv2.circle(frame, (x2, y2), 13, (255, 0, 0), cv2.FILLED)
+            # create a line b/w tips of index finger and thumb
+            cv2.line(frame, (x1, y1), (x2, y2), (255, 0, 0), 3)
 
-    # Drawings
-    cv2.rectangle(img, (50, 150), (85, 400), (255, 0, 0), 3)
-    cv2.rectangle(img, (50, int(volBar)), (85, 400), (255, 0, 0), cv2.FILLED)
-    cv2.putText(img, f'{int(volPer)} %', (40, 450), cv2.FONT_HERSHEY_COMPLEX,
-                1, (255, 0, 0), 3)
-    cVol = int(volume.GetMasterVolumeLevelScalar() * 100)
-    cv2.putText(img, f'Vol Set: {int(cVol)}', (400, 50), cv2.FONT_HERSHEY_COMPLEX,
-                1, colorVol, 3)
+            length = hypot(x2 - x1, y2 - y1)  
+            # distance b/w tips using hypotenuse
+            # from numpy we find our length by converting hand range in terms of volume range ie b/w -63.5 to 0
+            vol = np.interp(length, [30, 350], [volMin, volMax])
+            volbar = np.interp(length, [30, 350], [400, 150])
+            volper = np.interp(length, [30, 350], [0, 100])
 
-    # Frame rate
-    cTime = time.time()
-    fps = 1 / (cTime - pTime)
-    pTime = cTime
-    cv2.putText(img, f'FPS: {int(fps)}', (40, 50), cv2.FONT_HERSHEY_COMPLEX,
-                1, (255, 0, 0), 3)
+            volume.SetMasterVolumeLevel(vol, None)
 
-    cv2.imshow("Img", img)
-    key = cv2.waitKey(1)
-    if key == 27:
+    # Hand range 30 - 350
+    # Volume range -63.5 - 0.0
+    # creating volume bar for volume level
+    # vid ,initial position ,ending position ,rgb ,thickness
+    cv2.rectangle(frame, (50, 150), (85, 400), (0, 0, 255), 4)
+    cv2.rectangle(frame, (50, int(volbar)), (85, 400),
+                (0, 0, 255), cv2.FILLED)
+    cv2.putText(frame, f"{int(volper)}%", (10, 40),
+                cv2.FONT_ITALIC, 1, (0, 255, 98), 3)
+    # tell the volume percentage ,location,font of text,length,rgb color,thickness
+
+    cv2.imshow('Image', frame)  # Show the video
+    if cv2.waitKey(1) & 0xff == ord('q'):  # By using spacebar delay will stop
         break
-    elif key == ord('q'):
-        break
-    elif key == ord('s'):
-        cv2.imwrite('img.png', img)
-    elif key == ord('m'):
-        volume.SetMute(True, None)
-    elif key == ord('u'):
-        volume.SetMute(False, None)
-    elif key == ord('+'):
-        vol += 1
-        volume.SetMasterVolumeLevelScalar(vol / 100, None)
-    elif key == ord('-'):
-        vol -= 1
-        volume.SetMasterVolumeLevelScalar(vol / 100, None)
-    elif key == ord('r'):
-        vol = 0
-        volume.SetMasterVolumeLevelScalar(vol / 100, None)
-    elif key == ord('f'):
-        vol = 100
-        volume.SetMasterVolumeLevelScalar(vol / 100, None)
-    elif key == ord('1'):
-        vol = 1
-        volume.SetMasterVolumeLevelScalar(vol / 100, None)
-    elif key == ord('2'):
-        vol = 2
-        volume.SetMasterVolumeLevelScalar(vol / 100, None)
-    elif key == ord('3'):
-        vol = 3
-        volume.SetMasterVolumeLevelScalar(vol / 100, None)
+
+cap.release()  # stop cam
+cv2.destroyAllWindows()  # close window
