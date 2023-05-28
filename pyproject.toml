@@ -17,7 +17,7 @@ name = "aij"  # Required
 #
 # For a discussion on single-sourcing the version, see
 # https://packaging.python.org/guides/single-sourcing-package-version/
-version = "1.1.05"
+version = "1.2.1"
 
 # This is a one-line description or tagline of what your project does. This
 # corresponds to the "Summary" metadata field:
@@ -189,15 +189,32 @@ test = ["coverage"]
 # which executes the function `main` from this package when invoked.
 [project.scripts]  # Optional
 aij = "webcam:main"
-aij2 = "webcam2:main"
-aijnews = "news:main"
-aijintro = "intro:main"
-aijtranslate = "translate:main"
-aijtranscribe = "transcribe:main"
-aijchat = "chat:main"
-aijtube = "download:main"
-aijinit = "setup:main"
-aijvoice = "voice:main"
+aij-animation = "animation:main"
+aij-chat = "chat:main"
+aij-download = "download:main"
+aij-emotion = "emotion:main"
+aij-entity = "entity:main"
+aij-face = "face:main"
+aij-fake = "fake:main"
+aij-intro = "intro:main"
+aij-keyboard = "keyboard:main"
+aij-knowledge = "knowledge:main"
+aij-language = "language:main"
+aij-messaging = "messaging:main"
+aij-news = "news:main"
+aij-objectron = "objectron:main"
+aij-scrape = "scrape:main"
+aij-selfie = "selfie:main"
+aij-sentiment = "sentiment:main"
+aij-setup = "setup:main"
+aij-stream = "stream:main"
+aij-transcibe = "transcribe:main"
+aij-translate = "translate:main"
+aij-voice = "voice:main"
+aij-volume = "volume:main"
+aij-webcam = "webcam:main"
+aij-webcam2 = "webcam2:main"
+aij-webcam3 = "webcam3:main"
 
 # This is configuration specific to the `setuptools` build backend.
 # If you are using a different build backend, you will need to change this.
