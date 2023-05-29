@@ -30,7 +30,9 @@ def video_feed():
 @app.route('/')
 def index():
     """Video streaming home page."""
-    return render_template('index.html')
+    return render_template(
+        "https://raw.githubusercontent.com/codesapienbe/aij/main/src/stream/templates/index.html"
+    )
 
 def main():
     app.run(
