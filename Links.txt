@@ -1,0 +1,29 @@
+Links:
+
+GitHub: https://github.com/codesapienbe/aij
+PyPi: https://pypi.org/project/aij/
+
+- [ ] Ensure you can run pip from the command line!
+
+'''console
+py -m ensurepip --default-pip
+'''
+
+- [ ] Ensure pip, setuptools, and wheel are up to date!
+
+'''console
+py -m pip install --upgrade pip setuptools wheel
+'''
+
+- [ ] Optionally, create a virtual environment
+
+'''console
+py -m venv localenv
+localenv\scripts\activate
+'''
+
+- [ ] Installing from PyPI
+
+'''console
+py -m pip install aij
+'''
