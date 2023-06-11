@@ -8,7 +8,9 @@ from dotenv import load_dotenv
 
 load_dotenv()  # take environment variables from .env.
 
-# TODO: Implement this feature later
+# TODO: Implement this feature later (might not work as expected)
+
+
 def pre_init():
     """
     This function is called before the server is initialized
@@ -28,6 +30,7 @@ def pre_init():
     # if there is no docker container running named aij-messaging-server then run the server script 'aijinit'
     if not any(container.name == 'aij-messaging-server' for container in containers):
         os.system('aijinit')
+
 
 class AIAssistant:
     """
@@ -117,7 +120,7 @@ class NewsConsumer:
 
 
 def main():
-    
+
     api_key = os.environ.get("OPENAI_API_KEY")
     ai_assistant = AIAssistant(api_key)
     consumer = NewsConsumer('localhost', ai_assistant)
@@ -126,6 +129,13 @@ def main():
         consumer.consume()
     except KeyboardInterrupt:
         consumer.close()
+
+    result = ai_assistant.generate_response(
+        "What do you think about blockchain?")
+
+    print(
+        result
+    )
 
 
 if __name__ == '__main__':

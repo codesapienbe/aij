@@ -87,7 +87,7 @@ class VideoPublisher:
         self.connection.close()
 
 
-class NewsSubscriber:
+class VideoSubscriber:
     """
     This class implements a RabbitMQ consumer.
     """
@@ -133,8 +133,8 @@ class AIJKivy(App):
             queue_name='video_stream'
         )
 
-        # create an instance of the NewsSubscriber class
-        self.subscriber = NewsSubscriber(
+        # create an instance of the VideoSubscriber class
+        self.subscriber = VideoSubscriber(
             host='localhost',
             queue_name='video_stream',
             callback=self.print_news

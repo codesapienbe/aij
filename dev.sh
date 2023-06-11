@@ -33,7 +33,7 @@ pip install \
     openai \
     openai-whisper \
     python-dotenv \
-    kivy[dev] \
+    kivy \
     youtube_dl \
     ffmpeg-python \
     psutil \
@@ -68,7 +68,12 @@ pip install \
     pynput \
     screeninfo \
     comtypes \
-    pycaw
-
-
-
+    pycaw \
+    scipy \
+    scikit-learn \
+    tensorflow \
+    numpy \
+    matplotlib \
+    seaborn \
+    pandas \
+    nltk

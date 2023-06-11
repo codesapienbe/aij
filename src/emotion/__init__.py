@@ -43,26 +43,32 @@ def predict_emotion(face):
     # Return the predicted emotion label
     return emotions[np.argmax(predictions)]
 
-# Open a video stream
-cap = cv2.VideoCapture(0)
+def main():
 
-while True:
-    # Read a frame from the video stream
-    ret, frame = cap.read()
-    # Detect the face in the frame
-    face, coords = detect_face(frame)
-    # If a face is detected, predict the emotion label and draw a rectangle around the face
-    if face is not None:
-        emotion = predict_emotion(face)
-        x, y, w, h = coords
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-        cv2.putText(frame, emotion, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
-    # Display the frame
-    cv2.imshow('Face Emotion Recognition', frame)
-    # Wait for a key press
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+    # Open a video stream
+    cap = cv2.VideoCapture(0)
 
-# Release the video stream and close all windows
-cap.release()
-cv2.destroyAllWindows()
+    while True:
+        # Read a frame from the video stream
+        ret, frame = cap.read()
+        # Detect the face in the frame
+        face, coords = detect_face(frame)
+        # If a face is detected, predict the emotion label and draw a rectangle around the face
+        if face is not None:
+            emotion = predict_emotion(face)
+            x, y, w, h = coords
+            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+            cv2.putText(frame, emotion, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+        # Display the frame
+        cv2.imshow('Face Emotion Recognition', frame)
+        # Wait for a key press
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    # Release the video stream and close all windows
+    cap.release()
+    cv2.destroyAllWindows()
+    
+    
+if __name__ == '__main__':
+    main()

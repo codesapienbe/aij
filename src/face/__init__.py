@@ -227,66 +227,71 @@ def draw_emoji(current_emotion, img):
     return img
 
 
-# do not wait for the directories to be created
-thread_download_logo = threading.Thread(target=download_logo)
-thread_download_logo.start()
+def main():
 
-default_backend = "opencv"
-default_model = "VGG-Face"
+    # do not wait for the directories to be created
+    thread_download_logo = threading.Thread(target=download_logo)
+    thread_download_logo.start()
 
-cam = cv2.VideoCapture(0)
-cam.set(cv2.CAP_PROP_FRAME_WIDTH, SCREEN_WIDTH)
-cam.set(cv2.CAP_PROP_FRAME_HEIGHT, SCREEN_HEIGHT)
-cam.set(cv2.CAP_PROP_FPS, SCREEN_FPS)
+    default_backend = "opencv"
+    default_model = "VGG-Face"
 
-# Define min window size to be recognized as a face
-MIN_FACE_FRAME_WIDTH = 50
-MIN_FACE_FRAME_HEIGHT = 50
-FRAME_COUNTER = 0
-current_emotion = "neutral"
+    cam = cv2.VideoCapture(0)
+    cam.set(cv2.CAP_PROP_FRAME_WIDTH, SCREEN_WIDTH)
+    cam.set(cv2.CAP_PROP_FRAME_HEIGHT, SCREEN_HEIGHT)
+    cam.set(cv2.CAP_PROP_FPS, SCREEN_FPS)
 
-while cam.isOpened():
+    # Define min window size to be recognized as a face
+    MIN_FACE_FRAME_WIDTH = 50
+    MIN_FACE_FRAME_HEIGHT = 50
+    FRAME_COUNTER = 0
+    current_emotion = "neutral"
 
-    ret, img = cam.read()
-    img = cv2.flip(img, 1)  # Flip vertically
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    while cam.isOpened():
 
-    # increase the frame counter
-    FRAME_COUNTER += 1
+        ret, img = cam.read()
+        img = cv2.flip(img, 1)  # Flip vertically
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    try:
-        # after each 5 seconds detect faces
-        if FRAME_COUNTER >= SCREEN_FPS:
-            # reset the frame counter
-            FRAME_COUNTER = 0
-            # predict the emotion
-            emotion = DeepFace.analyze(img_path=img, actions=[
-                'emotion'], detector_backend=default_backend, align=True, silent=True)
+        # increase the frame counter
+        FRAME_COUNTER += 1
 
-            # get the emotion data from the dictionary
-            emotion_data = emotion[0]['emotion']
-            # convert to dataframe
-            emotion_df = pd.DataFrame(emotion_data, index=[0])
-            # get the dominant emotion
-            emotion_label = emotion_df.idxmax(axis=1)[0]
-            # add the emotion to the emotion history
-            current_emotion = emotion_label
+        try:
+            # after each 5 seconds detect faces
+            if FRAME_COUNTER >= SCREEN_FPS:
+                # reset the frame counter
+                FRAME_COUNTER = 0
+                # predict the emotion
+                emotion = DeepFace.analyze(img_path=img, actions=[
+                    'emotion'], detector_backend=default_backend, align=True, silent=True)
 
-    except Exception as e:
-        # draw error message if no face detected
-        pass
+                # get the emotion data from the dictionary
+                emotion_data = emotion[0]['emotion']
+                # convert to dataframe
+                emotion_df = pd.DataFrame(emotion_data, index=[0])
+                # get the dominant emotion
+                emotion_label = emotion_df.idxmax(axis=1)[0]
+                # add the emotion to the emotion history
+                current_emotion = emotion_label
 
-    img = draw_emoji(current_emotion, img)
-    img = draw_logo(logo_abs, img)
+        except Exception as e:
+            # draw error message if no face detected
+            pass
 
-    cv2.imshow('Emotion Recognition', img)
+        img = draw_emoji(current_emotion, img)
+        img = draw_logo(logo_abs, img)
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+        cv2.imshow('Emotion Recognition', img)
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            cam.release()
+            break
+
+    if cam.isOpened():
         cam.release()
-        break
+
+    cv2.destroyAllWindows()
 
 
-if cam.isOpened():
-    cam.release()
-
-cv2.destroyAllWindows()
+if __name__ == '__main__':
+    main()
